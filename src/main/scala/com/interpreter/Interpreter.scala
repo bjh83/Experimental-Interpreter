@@ -49,19 +49,20 @@ class Interpreter {
 
   private def returnStmt(statement: ReturnStmt) = getVal(statement.expr)
 
-  private def blockStmt(block: BlockStmt) {
+  private def blockStmt(block: BlockStmt): Option[Value] = {
     stack.push
-    interpretStatements(block.statements)
+    var retVal = interpretStatements(block.statements)
     stack.pop
+    retVal
   }
 
-  private def ifStmt(statement: IfStmt) {
+  private def ifStmt(statement: IfStmt): Option[Value] = {
     if(getVal(statement.cond).asBool) {
       lookupStmt(statement.ifStmt)
     } else {
       statement.elseStmt match {
         case Some(stmt) => lookupStmt(stmt)
-        case None => // Do nothing
+        case None => None
       }
     }
   }
@@ -70,14 +71,17 @@ class Interpreter {
     case stmt: DeclareStmt => { declare(stmt); return None }
     case stmt: AssignStmt => { assign(stmt); return None }
     case stmt: ReturnStmt => Some(returnStmt(stmt))
-    case stmt: IfStmt => { ifStmt(stmt); return None }
-    case stmt: BlockStmt => { blockStmt(stmt); return None }
+    case stmt: IfStmt => ifStmt(stmt)
+    case stmt: BlockStmt => blockStmt(stmt)
   }
 
-  private def interpretStatements(statements: List[Statement]) {
+  private def interpretStatements(statements: List[Statement]): Option[Value] = {
     for(stmt <- statements) {
-      lookupStmt(stmt)
+      for(value <- lookupStmt(stmt)) {
+        return Some(value)
+      }
     }
+    return None
   }
 
   def interpretTree(statements: List[Statement]): Value = {
