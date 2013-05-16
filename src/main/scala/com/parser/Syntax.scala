@@ -1,10 +1,18 @@
 package com.parser
 
+sealed abstract class Symbol
+
+case object DoubleType extends Symbol
+case object BoolType extends Symbol
+
 sealed abstract class Expression
 
-case class Variable(ident: String) extends Expression
-case class Value(value: Double) extends Expression
-case class BinaryOp(op: String, left: Expression, right: Expression) extends Expression
+case class Variable(valType: Symbol, ident: String) extends Expression
+case class BinaryOp(op: Token, left: Expression, right: Expression) extends Expression
+case class Value(valType: Symbol, value: Any) extends Expression {
+  def asDouble = value.asInstanceOf[Double]
+  def asBool = value.asInstanceOf[Boolean]
+}
 
 sealed abstract class Statement
 

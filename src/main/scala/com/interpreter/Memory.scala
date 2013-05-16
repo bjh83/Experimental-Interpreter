@@ -1,6 +1,5 @@
 package com.interpreter
 
-import java.util.{Stack, ArrayList}
 import scala.collection.mutable.{HashMap, Stack}
 import com.parser._
 
@@ -30,7 +29,11 @@ package object memory {
     }
 
     def update(variable: Variable, value: Value) {
-      stack.head(variable) = value
+      if(variable.valType == value.valType) {
+        stack.head(variable) = value
+      } else {
+        scala.sys.error("Identifier is of type: " + variable.valType + "; however, the value is of type: " + value.valType)
+      }
     }
   }
 

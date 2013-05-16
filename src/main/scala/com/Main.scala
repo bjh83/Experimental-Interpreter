@@ -10,7 +10,8 @@ object Run {
       println("Just one file name")
       return
     }
-    println(new Interpreter().interpretTree(LanguageParser(Source.fromFile(args(0)).mkString)))
+    var tokens = new Lexer().parse(Source.fromFile(args(0)).mkString)
+    println(new Interpreter().interpretTree(new TokenParser().parse(tokens)))
   }
 }
 
