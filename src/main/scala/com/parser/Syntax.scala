@@ -12,6 +12,8 @@ case class BinaryOp(op: Token, left: Expression, right: Expression) extends Expr
 case class Value(valType: Symbol, value: Any) extends Expression {
   def asDouble = value.asInstanceOf[Double]
   def asBool = value.asInstanceOf[Boolean]
+
+  override def toString(): String = value.toString
 }
 
 sealed abstract class Statement

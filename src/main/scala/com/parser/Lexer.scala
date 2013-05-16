@@ -3,11 +3,8 @@ package com.parser
 import scala.util.parsing.combinator.RegexParsers
 
 class Lexer extends RegexParsers {
-  def identifier: Parser[Identifier] = """\w+(\w|\d|_)*""".r ^^ { ident => Identifier(ident) }
-
-  def number: Parser[Number] = """\d+(\.\d*)?""".r ^^ { number => Number(number.toDouble) }
-
-  def bool: Parser[Bool] = """true|false""".r ^^ { bool => Bool(bool.toBoolean) }
+  def keyword: Parser[String] = """(double|bool|return|if|else|while|for|true|false)[^\w]""".r
+  def identifier: Parser[Identifier] = not (keyword) ~> """[a-zA-Z]+\w*""".r ^^ { ident => Identifier(ident) }
 
   def doubleType: Parser[Token] = "double" ^^ { _ => DoubleToken }
   def boolType: Parser[Token] = "bool" ^^ { _ => BoolToken }
@@ -37,9 +34,14 @@ class Lexer extends RegexParsers {
   def assign: Parser[Token] = "=" ^^ { _ => Assign }
   def endLine: Parser[Token] = ";" ^^ { _ => EndLine }
 
-  def lines: Parser[List[Token]] = (identifier | number | bool | doubleType | boolType | _return | _if | _else | _while | _for | leftParen |
+  def number: Parser[Number] = """\d+(\.\d*)?""".r ^^ { number => Number(number.toDouble) }
+
+  def bool: Parser[Bool] = """true|false""".r ^^ { bool => Bool(bool.toBoolean) }
+
+
+  def lines: Parser[List[Token]] = (identifier | doubleType | boolType | _return | _if | _else | _while | _for | leftParen |
     rightParen | leftBrace | rightBrace | leftSquareBracket | rightSquareBracket | plus | minus | times | divided | and | or | equals |
-    notEquals | lessThan | greaterThan | lessOrEqual | greaterOrEqual | assign | endLine)+
+    notEquals | lessThan | greaterThan | lessOrEqual | greaterOrEqual | assign | endLine | number | bool)+
 
   def parse(input: String): List[Token] = parseAll(lines, input) match {
     case Success(result, _) => result

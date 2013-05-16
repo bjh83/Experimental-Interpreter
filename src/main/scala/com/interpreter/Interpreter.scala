@@ -26,6 +26,7 @@ class Interpreter {
       case GreaterThan => Value(BoolType, getVal(left).asDouble > getVal(right).asDouble)
       case LessOrEqual => Value(BoolType, getVal(left).asDouble <= getVal(right).asDouble)
       case GreaterOrEqual => Value(BoolType, getVal(left).asDouble >= getVal(right).asDouble)
+      case _ => scala.sys.error("Not a valid symbol")
     }
   }
 
