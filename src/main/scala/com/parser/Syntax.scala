@@ -21,4 +21,6 @@ sealed abstract class Statement
 case class DeclareStmt(ident: Variable, expr: Option[Expression] = None) extends Statement
 case class AssignStmt(ident: Variable, expr: Expression) extends Statement
 case class ReturnStmt(expr: Expression) extends Statement
+case class BlockStmt(statements: List[Statement]) extends Statement
+case class IfStmt(cond: Expression, ifStmt: Statement, elseStmt: Option[Statement]) extends Statement
 

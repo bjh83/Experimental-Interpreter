@@ -73,7 +73,17 @@ class TokenParser extends Parsers {
 
   def _return: Parser[Statement] = Return ~> or <~ EndLine ^^ { expression => ReturnStmt(expression) }
 
-  def statement: Parser[Statement] = declaration | assignment | _return
+  def _if: Parser[Statement] = If ~> (LeftParen ~> or <~ RightParen) ~ statement ~ (Else ~> statement).? ^^ {
+    case expression ~ ifStatement ~ (elseStatement: Option[Statement]) => IfStmt(expression, ifStatement, elseStatement)
+  }
+
+  def startBlock: Parser[Token] = LeftBrace ^^ { toke => symbolTable.push; toke }
+
+  def endBlock: Parser[Token] = RightBrace ^^ { toke => symbolTable.pop; toke }
+
+  def block: Parser[Statement] = startBlock ~> statements <~ endBlock ^^ { stmts => BlockStmt(stmts) }
+
+  def statement: Parser[Statement] = declaration | assignment | _return | _if | block
 
   def statements: Parser[List[Statement]] = statement*
 
