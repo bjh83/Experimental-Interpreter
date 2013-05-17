@@ -77,13 +77,17 @@ class TokenParser extends Parsers {
     case expression ~ ifStatement ~ (elseStatement: Option[Statement]) => IfStmt(expression, ifStatement, elseStatement)
   }
 
+  def _while: Parser[Statement] = While ~> (LeftParen ~> or <~ RightParen) ~ statement ^^ {
+    case expression ~ statement => WhileStmt(expression, statement)
+  }
+
   def startBlock: Parser[Token] = LeftBrace ^^ { toke => symbolTable.push; toke }
 
   def endBlock: Parser[Token] = RightBrace ^^ { toke => symbolTable.pop; toke }
 
   def block: Parser[Statement] = startBlock ~> statements <~ endBlock ^^ { stmts => BlockStmt(stmts) }
 
-  def statement: Parser[Statement] = declaration | assignment | _return | _if | block
+  def statement: Parser[Statement] = declaration | assignment | _return | block | _if | _while
 
   def statements: Parser[List[Statement]] = statement*
 

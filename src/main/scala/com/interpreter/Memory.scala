@@ -30,6 +30,13 @@ package object memory {
 
     def update(variable: Variable, value: Value) {
       if(variable.valType == value.valType) {
+        var updated = false
+        for(frame <- stack) {
+          if(frame contains variable) {
+            frame(variable) = value
+            return
+          }
+        }
         stack.head(variable) = value
       } else {
         scala.sys.error("Identifier is of type: " + variable.valType + "; however, the value is of type: " + value.valType)

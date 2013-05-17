@@ -67,12 +67,22 @@ class Interpreter {
     }
   }
 
+  private def whileStmt(statement: WhileStmt): Option[Value] = {
+    while(getVal(statement.cond).asBool) {
+      for(value <- lookupStmt(statement.stmt)) {
+        return Some(value)
+      }
+    }
+    return None
+  }
+
   private def lookupStmt(statement: Statement): Option[Value] = statement match {
     case stmt: DeclareStmt => { declare(stmt); return None }
     case stmt: AssignStmt => { assign(stmt); return None }
     case stmt: ReturnStmt => Some(returnStmt(stmt))
-    case stmt: IfStmt => ifStmt(stmt)
     case stmt: BlockStmt => blockStmt(stmt)
+    case stmt: IfStmt => ifStmt(stmt)
+    case stmt: WhileStmt => whileStmt(stmt)
   }
 
   private def interpretStatements(statements: List[Statement]): Option[Value] = {

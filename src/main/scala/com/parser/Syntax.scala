@@ -23,4 +23,5 @@ case class AssignStmt(ident: Variable, expr: Expression) extends Statement
 case class ReturnStmt(expr: Expression) extends Statement
 case class BlockStmt(statements: List[Statement]) extends Statement
 case class IfStmt(cond: Expression, ifStmt: Statement, elseStmt: Option[Statement]) extends Statement
+case class WhileStmt(cond: Expression, stmt: Statement) extends Statement
 
