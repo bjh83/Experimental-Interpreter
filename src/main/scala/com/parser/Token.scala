@@ -5,6 +5,9 @@ sealed abstract class Token
 case class Identifier(value: String) extends Token
 case class Number(value: Double) extends Token
 case class Bool(value: Boolean) extends Token
+case object CharToken extends Token
+case object IntToken extends Token
+case object FloatToken extends Token
 case object DoubleToken extends Token
 case object BoolToken extends Token
 case object Return extends Token

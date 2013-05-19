@@ -109,9 +109,9 @@ class TokenParser extends Parsers {
 
   def statements: Parser[List[Statement]] = statement*
   
-  def functionCheck: Parser[Unit] = typeToken ~ identifier ~ (LeftParen ~> repsep(parameterCheck, Comma) <~ RightParen) ~ (EndLine | LeftBrace ~> (statement*) <~ RightBrace) ^^ { _ => }
+  def functionCheck: Parser[Unit] = typeToken ~ identifier ~ (LeftParen ~> repsep(parameterCheck, Comma) <~ RightParen) ~ (EndLine | startBlock ~> (statement*) <~ endBlock) ^^ { _ => }
   
-  def function: Parser[Unit] = typeToken ~ identifier ~ (LeftParen ~> repsep(parameter, Comma) <~ RightParen) ~ (EndLine | LeftBrace ~> (statement*) <~ RightBrace) ^^ {
+  def function: Parser[Unit] = typeToken ~ identifier ~ (LeftParen ~> repsep(parameter, Comma) <~ RightParen) ~ (EndLine | startBlock ~> (statement*) <~ endBlock) ^^ {
     case (typeToken ~ identifier ~ paramList) ~ endOrBody => endOrBody match {
       case statements: List[Statement] => functionTable(identifier.value) = FunctionDefinition(typeToken, paramList, statements)
       case _ => if(!functionTable.contains(identifier.value)) {

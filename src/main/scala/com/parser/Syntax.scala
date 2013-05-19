@@ -2,6 +2,9 @@ package com.parser
 
 sealed abstract class Symbol
 
+case object CharType extends Symbol
+case object IntType extends Symbol
+case object FloatType extends Symbol
 case object DoubleType extends Symbol
 case object BoolType extends Symbol
 
