@@ -6,12 +6,30 @@ import com.parser._
 package object memory {
 
   type StackFrame = HashMap[Variable, Value]
+  
+  type CallSegment = List[StackFrame]
 
   class Stack {
 
     private val stack = new scala.collection.mutable.Stack[StackFrame]
+    
+    private val callStack = new scala.collection.mutable.Stack[CallSegment]
 
     push()
+    
+    def call() {
+      var segment = List[StackFrame]()
+      while(stack.length > 1) {
+        segment ::= stack.pop
+      }
+      callStack.push(segment)
+    }
+    
+    def restore() {
+      for(frame <- callStack.pop) {
+        stack.push(frame)
+      }
+    }
 
     def pop() = stack.pop()
 

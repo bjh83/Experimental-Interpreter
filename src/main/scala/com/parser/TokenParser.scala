@@ -22,6 +22,8 @@ class TokenParser extends Parsers {
     ident => symbolTable(ident.asInstanceOf[Identifier].value)
   }
   
+  def parameterCheck: Parser[Unit] = typeToken ~ identifier ^^ { _ => }
+  
   def parameter: Parser[Variable] = typeToken ~ identifier ^^ {
     case typeToken ~ ident => { symbolTable(ident.value) = typeToken; symbolTable(ident.value) }
   }
@@ -76,7 +78,7 @@ class TokenParser extends Parsers {
     }
   }
 
-  def declaration: Parser[Statement] = typeToken ~ identifier ~ (Assign ~> or).? <~ EndLine ^^ {
+  def declaration: Parser[Statement] = not(functionCheck) ~> typeToken ~ identifier ~ (Assign ~> or).? <~ EndLine ^^ {
     case typeToken ~ ident ~ (expression: Option[Expression]) => {
       symbolTable(ident.value) = typeToken
       DeclareStmt(symbolTable(ident.value), expression)
@@ -107,6 +109,8 @@ class TokenParser extends Parsers {
 
   def statements: Parser[List[Statement]] = statement*
   
+  def functionCheck: Parser[Unit] = typeToken ~ identifier ~ (LeftParen ~> repsep(parameterCheck, Comma) <~ RightParen) ~ (EndLine | LeftBrace ~> (statement*) <~ RightBrace) ^^ { _ => }
+  
   def function: Parser[Unit] = typeToken ~ identifier ~ (LeftParen ~> repsep(parameter, Comma) <~ RightParen) ~ (EndLine | LeftBrace ~> (statement*) <~ RightBrace) ^^ {
     case (typeToken ~ identifier ~ paramList) ~ endOrBody => endOrBody match {
       case statements: List[Statement] => functionTable(identifier.value) = FunctionDefinition(typeToken, paramList, statements)
@@ -116,15 +120,17 @@ class TokenParser extends Parsers {
     }
   }
   
-  def functions: Parser[Unit] = (function*) ^^ { _ => }
+  def topLevelStatements: Parser[List[Statement]] = ((declaration | function)*) ^^ {
+    _.filter { _.isInstanceOf[Statement] }.map { _.asInstanceOf[Statement] }
+  }
 
-  def parse(input: List[Token]): HashMap[String, FunctionDefinition] = functions(new TokenReader(input)) match {
+  def parse(input: List[Token]): (List[Statement], HashMap[String, FunctionDefinition]) = topLevelStatements(new TokenReader(input)) match {
     case Success(result, _) => if(functionTable.foldLeft(true) {
       case (bool, (name, definition)) => bool && definition.isInstanceOf[FunctionDefinition]
     }) {
-      return functionTable.map {
+      return (result, functionTable.map {
         case (ident, func) => (ident, func.asInstanceOf[FunctionDefinition])
-        }
+        })
     } else {
       scala.sys.error("Function was not declared")
     }

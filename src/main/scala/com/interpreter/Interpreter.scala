@@ -96,7 +96,8 @@ class Interpreter(private var functionTable: HashMap[String, FunctionDefinition]
     return None
   }
 
-  def interpret(): Value = {
+  def interpret(tree: List[Statement]): Value = {
+    interpretStatements(tree)
     return funcCall(FunctionCall("main", List())).get
   }
   
@@ -109,9 +110,11 @@ class Interpreter(private var functionTable: HashMap[String, FunctionDefinition]
   }
   
   private def funcCall(function: FunctionCall): Option[Value] = {
-    stack.push(assignParameters(functionTable(function.func).paramList, function.params))
+    stack.call //Hides local variables
+    stack.push(assignParameters(functionTable(function.func).paramList, function.params)) //pushes parameters
     val retVal = interpretStatements(functionTable(function.func).body)
-    stack.pop
+    stack.pop //removes parameters
+    stack.restore //restores local variables
     return retVal
   }
 
