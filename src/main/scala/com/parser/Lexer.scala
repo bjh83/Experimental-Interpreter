@@ -19,6 +19,7 @@ class Lexer extends RegexParsers {
   def rightBrace: Parser[Token] = "}" ^^ { _ => RightBrace }
   def leftSquareBracket: Parser[Token] = "[" ^^ { _ => LeftSquareBracket }
   def rightSquareBracket: Parser[Token] = "]" ^^ { _ => RightSquareBracket }
+  def comma: Parser[Token] = "," ^^ { _ => Comma }
   def plus: Parser[Token] = "+" ^^ { _ => Plus }
   def minus: Parser[Token] = "-" ^^ { _ => Minus }
   def times: Parser[Token] = "*" ^^ { _ => Times }
@@ -40,7 +41,7 @@ class Lexer extends RegexParsers {
 
 
   def lines: Parser[List[Token]] = (identifier | doubleType | boolType | _return | _if | _else | _while | _for | leftParen |
-    rightParen | leftBrace | rightBrace | leftSquareBracket | rightSquareBracket | plus | minus | times | divided | and | or | equals |
+    rightParen | leftBrace | rightBrace | leftSquareBracket | rightSquareBracket | comma | plus | minus | times | divided | and | or | equals |
     notEquals | lessThan | greaterThan | lessOrEqual | greaterOrEqual | assign | endLine | number | bool)+
 
   def parse(input: String): List[Token] = parseAll(lines, input) match {

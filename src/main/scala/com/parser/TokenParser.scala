@@ -1,10 +1,13 @@
 package com.parser
 
 import scala.util.parsing.combinator.Parsers
+import scala.collection.mutable.HashMap
 
 class TokenParser extends Parsers {
 
   private var symbolTable = new SymbolTable
+  
+  private var functionTable = new HashMap[String, Function]
 
   override type Elem = Token
 
@@ -14,12 +17,25 @@ class TokenParser extends Parsers {
 
   def identifier: Parser[Identifier] = acceptIf(ident => ident.isInstanceOf[Identifier])(_ => "Is not valid identifier") ^^ { _.asInstanceOf[Identifier] }
 
-  def variable: Parser[Variable] = acceptIf(ident => ident.isInstanceOf[Identifier] && 
+  def variable: Parser[Variable] = not(functionCall) ~> acceptIf(ident => ident.isInstanceOf[Identifier] && 
     symbolTable.contains(ident.asInstanceOf[Identifier].value))(_ => "Variable was not declared") ^^ { 
     ident => symbolTable(ident.asInstanceOf[Identifier].value)
   }
+  
+  def parameter: Parser[Variable] = typeToken ~ identifier ^^ {
+    case typeToken ~ ident => { symbolTable(ident.value) = typeToken; symbolTable(ident.value) }
+  }
+  
+  def functionName: Parser[String] = acceptIf(ident => ident.isInstanceOf[Identifier] &&
+      functionTable.contains(ident.asInstanceOf[Identifier].value))(_ => "Function has not been declared") ^^ {
+    _.asInstanceOf[Identifier].value
+  }
+  
+  def functionCall: Parser[FunctionCall] = functionName ~ (LeftParen ~> repsep(or, Comma) <~ RightParen) ^^ {
+    case ident ~ list => FunctionCall(ident, list)
+  }
 
-  def value: Parser[Expression] = number | bool | variable | LeftParen ~> or <~ RightParen
+  def value: Parser[Expression] = number | bool | variable | functionCall | LeftParen ~> or <~ RightParen
 
   def doubleType: Parser[Symbol] = DoubleToken ^^ { _ => DoubleType }
 
@@ -90,9 +106,28 @@ class TokenParser extends Parsers {
   def statement: Parser[Statement] = declaration | assignment | _return | block | _if | _while
 
   def statements: Parser[List[Statement]] = statement*
+  
+  def function: Parser[Unit] = typeToken ~ identifier ~ (LeftParen ~> repsep(parameter, Comma) <~ RightParen) ~ (EndLine | LeftBrace ~> (statement*) <~ RightBrace) ^^ {
+    case (typeToken ~ identifier ~ paramList) ~ endOrBody => endOrBody match {
+      case statements: List[Statement] => functionTable(identifier.value) = FunctionDefinition(typeToken, paramList, statements)
+      case _ => if(!functionTable.contains(identifier.value)) {
+        functionTable(identifier.value) = FunctionStub
+      } 
+    }
+  }
+  
+  def functions: Parser[Unit] = (function*) ^^ { _ => }
 
-  def parse(input: List[Token]): List[Statement] = statements(new TokenReader(input)) match {
-    case Success(result, _) => result
+  def parse(input: List[Token]): HashMap[String, FunctionDefinition] = functions(new TokenReader(input)) match {
+    case Success(result, _) => if(functionTable.foldLeft(true) {
+      case (bool, (name, definition)) => bool && definition.isInstanceOf[FunctionDefinition]
+    }) {
+      return functionTable.map {
+        case (ident, func) => (ident, func.asInstanceOf[FunctionDefinition])
+        }
+    } else {
+      scala.sys.error("Function was not declared")
+    }
     case failure: NoSuccess => scala.sys.error(failure.msg)
   }
 }

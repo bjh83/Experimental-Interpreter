@@ -15,6 +15,7 @@ case class Value(valType: Symbol, value: Any) extends Expression {
 
   override def toString(): String = value.toString
 }
+case class FunctionCall(func: String, params: List[Expression]) extends Expression
 
 sealed abstract class Statement
 
@@ -25,3 +26,7 @@ case class BlockStmt(statements: List[Statement]) extends Statement
 case class IfStmt(cond: Expression, ifStmt: Statement, elseStmt: Option[Statement]) extends Statement
 case class WhileStmt(cond: Expression, stmt: Statement) extends Statement
 
+sealed abstract class Function
+
+case object FunctionStub extends Function
+case class FunctionDefinition(retType: Symbol, paramList: List[Variable], body: List[Statement]) extends Function

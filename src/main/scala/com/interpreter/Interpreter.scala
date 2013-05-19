@@ -2,8 +2,9 @@ package com.interpreter
 
 import com.interpreter.memory._
 import com.parser._
+import scala.collection.mutable.HashMap
 
-class Interpreter {
+class Interpreter(private var functionTable: HashMap[String, FunctionDefinition]) {
   private var stack = new Stack
 
   private def evaluate(binaryOp: BinaryOp): Value = binaryOp match {
@@ -34,6 +35,7 @@ class Interpreter {
     case expr: Variable => stack(expr)
     case expr: Value => expr
     case expr: BinaryOp => evaluate(expr)
+    case expr: FunctionCall => funcCall(expr).get
   }
 
   private def declare(statement: DeclareStmt) {
@@ -94,13 +96,23 @@ class Interpreter {
     return None
   }
 
-  def interpretTree(statements: List[Statement]): Value = {
-    for(stmt <- statements) {
-      for(value <- lookupStmt(stmt)) {
-        return value
-      }
+  def interpret(): Value = {
+    return funcCall(FunctionCall("main", List())).get
+  }
+  
+  private def assignParameters(params: List[Variable], values: List[Expression]): StackFrame = if(params.length == values.length) {
+    params.zip(values).foldLeft(new StackFrame) {
+      case (stackFrame, (variable, expression)) => { stackFrame(variable) = getVal(expression); stackFrame }
     }
-    scala.sys.error("Program ended without a return")
+  } else {
+    scala.sys.error("Wrong number of parameters")
+  }
+  
+  private def funcCall(function: FunctionCall): Option[Value] = {
+    stack.push(assignParameters(functionTable(function.func).paramList, function.params))
+    val retVal = interpretStatements(functionTable(function.func).body)
+    stack.pop
+    return retVal
   }
 
 }

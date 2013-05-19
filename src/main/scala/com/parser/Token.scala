@@ -19,6 +19,7 @@ case object LeftBrace extends Token
 case object RightBrace extends Token
 case object LeftSquareBracket extends Token
 case object RightSquareBracket extends Token
+case object Comma extends Token
 case object Plus extends Token
 case object Minus extends Token
 case object Times extends Token

@@ -11,8 +11,7 @@ object Run {
       return
     }
     var tokens = new Lexer().parse(Source.fromFile(args(0)).mkString)
-    println(tokens)
-    println(new Interpreter().interpretTree(new TokenParser().parse(tokens)))
+    println(new Interpreter(new TokenParser().parse(tokens)).interpret)
   }
 }
 
